@@ -7,7 +7,7 @@ package cmd
 import (
 	"os"
 
-	"github.com/arejula27/measurepymemo/pkg/docker"
+	"github.com/arejula27/measurepymemo/pkg/powerstat"
 	"github.com/spf13/cobra"
 )
 
@@ -42,7 +42,8 @@ func init() {
 }
 
 func measurepymemo(cmd *cobra.Command, args []string) {
-	err := docker.RunContainer("arejula27/pymemo:test")
+	//err := docker.RunContainer("arejula27/pymemo:test")
+	err := powerstat.Measure()
 	if err != nil {
 
 		panic(err)
