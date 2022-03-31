@@ -9,8 +9,7 @@ import (
 	"github.com/docker/docker/client"
 )
 
-func pullImage(image string) error {
-	ctx := context.Background()
+func pullImage(image string, ctx context.Context) error {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err
@@ -28,8 +27,8 @@ func pullImage(image string) error {
 
 func RunContainer(image string) error {
 	ctx := context.Background()
-	if !checkImage(image) {
-		pullImage(image)
+	if !checkImage(image, ctx) {
+		pullImage(image, ctx)
 	}
 
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -63,9 +62,8 @@ func RunContainer(image string) error {
 	return nil
 }
 
-func checkImage(image string) bool {
+func checkImage(image string, ctx context.Context) bool {
 
-	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return false
