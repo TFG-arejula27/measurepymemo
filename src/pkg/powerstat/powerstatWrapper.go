@@ -29,7 +29,7 @@ type Cstate struct {
 }
 
 func Measure() error {
-	pwrInf := PowerInfo{frames: make([]PowerInfoData, 10)}
+	pwrInf := PowerInfo{frames: make([]PowerInfoData, 0)}
 	cmd := exec.Command("powerstat", "-R", "-c", "-z", "-f")
 	data, err := cmd.Output()
 	if err != nil {
