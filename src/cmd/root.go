@@ -5,6 +5,7 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"log"
 	"os"
 
 	"github.com/arejula27/measurepymemo/pkg/powerstat"
@@ -43,10 +44,10 @@ func init() {
 
 func measurepymemo(cmd *cobra.Command, args []string) {
 	//err := docker.RunContainer("arejula27/pymemo:test")
-	err := powerstat.Measure()
+	pwrInf, err := powerstat.Measure("60")
 	if err != nil {
-
 		panic(err)
 	}
+	log.Println(pwrInf)
 
 }
