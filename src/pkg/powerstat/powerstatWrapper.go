@@ -114,7 +114,7 @@ func (m *measurer) Run() (PowerInfo, error) {
 			}
 			pwrInf.C0 = cstatedata
 
-		} else if strings.HasPrefix("POLL", line) {
+		} else if strings.HasPrefix(line, "POLL") {
 			cstatedata, err := getCstateData(line)
 			if err != nil {
 				log.Println("cant get minimun POLL state info")

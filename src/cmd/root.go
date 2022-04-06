@@ -7,6 +7,7 @@ package cmd
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/arejula27/measurepymemo/pkg/powerstat"
 	"github.com/spf13/cobra"
@@ -44,10 +45,58 @@ func init() {
 
 func measurepymemo(cmd *cobra.Command, args []string) {
 	//err := docker.RunContainer("arejula27/pymemo:test")
-	pwrInf, err := powerstat.Measure("60")
+	measurer := powerstat.New("60")
+	go func() {
+		time.Sleep(time.Second * 10)
+		measurer.End()
+	}()
+
+	pwrInf, err := measurer.Run()
 	if err != nil {
 		panic(err)
 	}
-	log.Println(pwrInf)
 
+	err = WriteFile("data.csv", pwrInf.ToCsv())
+	if err != nil {
+		log.Fatalln(err)
+
+	}
+
+}
+
+func printHeader() string {
+	header := "Average power(Watts);Average frecuenzy;"
+	header += "Max power(Watts);Max frecuenzy;"
+	header += "Min power(Watts);Min frecuenzy;"
+	header += "C2 resident;C2 count;C2 latency;"
+	header += "C1 resident;C1 count;C1 latency;"
+	header += "C0 resident;C0 count;C0 latency;"
+	header += "POLL resident;POLL count;POLL latency"
+	header += "\n"
+	return header
+}
+
+func WriteFile(fileName, output string) error {
+	var newfile bool
+	file, err := os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		newfile = true
+		file, err = os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY, 0644)
+	}
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	if newfile {
+		_, err = file.WriteString(printHeader())
+		if err != nil {
+			return err
+		}
+	}
+	_, err = file.WriteString(output)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
