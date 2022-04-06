@@ -148,8 +148,8 @@ func getFrameInfoData(line string) (PowerInfoData, error) {
 	parsedLine := strings.Split(line, " ")
 
 	return PowerInfoData{
-		Power:     parsedLine[9],
-		Frecuency: parsedLine[10],
+		Power:     parsedLine[12],
+		Frecuency: parsedLine[13],
 	}, nil
 }
 

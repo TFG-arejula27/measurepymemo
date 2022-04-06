@@ -172,11 +172,8 @@ func checkPrivileges() {
 	currentUser, _ := user.Current()
 	if currentUser.Username != "root" {
 
-		if rootFlags.frecuenzy > 0 {
-			fmt.Println("It is not posible to change the frecuency without root privileges")
-			os.Exit(1)
-		}
-		fmt.Println("You are running this program without root privileges, energy consumition will not be measure")
+		fmt.Println("It is not posible gather metrcis without root privileges")
+		os.Exit(1)
 
 	}
 }
