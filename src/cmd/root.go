@@ -12,6 +12,7 @@ import (
 	"sync"
 
 	"github.com/arejula27/measurepymemo/pkg/docker"
+	"github.com/arejula27/measurepymemo/pkg/frecuenzy"
 	"github.com/arejula27/measurepymemo/pkg/powerstat"
 	"github.com/spf13/cobra"
 )
@@ -83,9 +84,27 @@ func init() {
 		"t",
 		60,
 		"Set the maximun time in seconds the program will gather metrics, if the container lates more the output will not be correct. Ensure the max time is correctly set")
+
+	//TODO flag for choose image (i)
 }
 
 func measurepymemo(cmd *cobra.Command, args []string) {
+
+	if rootFlags.frecuenzy > 0 {
+		fm := frecuenzy.New()
+		err := fm.Set(rootFlags.frecuenzy)
+		if err != nil {
+			fmt.Println("Problems on set a new frecuenzy")
+		}
+		defer func() {
+			err = fm.Restore()
+			if err != nil {
+				fmt.Println("Problems recoveryn previous governor")
+			}
+
+		}()
+	}
+
 	wg := new(sync.WaitGroup)
 	wg.Add(2)
 	cointainersEnded = make(chan bool)
@@ -152,7 +171,13 @@ func launchContainer(mainWg *sync.WaitGroup) {
 func checkPrivileges() {
 	currentUser, _ := user.Current()
 	if currentUser.Username != "root" {
+
+		if rootFlags.frecuenzy > 0 {
+			fmt.Println("It is not posible to change the frecuency without root privileges")
+			os.Exit(1)
+		}
 		fmt.Println("You are running this program without root privileges, energy consumition will not be measure")
+
 	}
 }
 
