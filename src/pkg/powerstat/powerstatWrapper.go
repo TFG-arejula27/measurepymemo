@@ -4,9 +4,14 @@ import (
 	"log"
 	"os/exec"
 	"regexp"
-	"strconv"
 	"strings"
+	"syscall"
 )
+
+//measurer is a struct that allows external package to intercat with powerstat
+type measurer struct {
+	cmd *exec.Cmd
+}
 
 type PowerInfo struct {
 	Averge PowerInfoData `json:"averge"`
@@ -19,19 +24,27 @@ type PowerInfo struct {
 	frames []PowerInfoData
 }
 type PowerInfoData struct {
-	Power     float32
-	Frecuency float32
+	Power     string
+	Frecuency string
 }
 type CStateData struct {
-	Resident float32
-	Count    int32
-	Latency  int32
+	Resident string
+	Count    string
+	Latency  string
 }
 
-func Measure(time string) (PowerInfo, error) {
+//New creates a struct measurer, initializing the value of time to one minute
+func New(time string) *measurer {
+
+	return &measurer{
+		cmd: exec.Command("powerstat", "-R", "-c", "-z", "-n", "-f", "1", time),
+	}
+}
+
+//Run executes powerstate
+func (m *measurer) Run() (PowerInfo, error) {
 	pwrInf := PowerInfo{frames: make([]PowerInfoData, 0)}
-	cmd := exec.Command("powerstat", "-R", "-c", "-z", "-n", "-f", "1", time)
-	data, err := cmd.Output()
+	data, err := m.cmd.Output()
 	if err != nil {
 		return pwrInf, err
 
@@ -119,21 +132,16 @@ func Measure(time string) (PowerInfo, error) {
 
 }
 
+func (m *measurer) End() {
+	m.cmd.Process.Signal(syscall.SIGINT)
+}
+
 func getFrameInfoData(line string) (PowerInfoData, error) {
 	parsedLine := strings.Split(line, " ")
-	power, err := strconv.ParseFloat(parsedLine[9], 32)
-
-	if err != nil {
-		return PowerInfoData{}, err
-	}
-	frecuency, err := strconv.ParseFloat(parsedLine[10], 32)
-	if err != nil {
-		return PowerInfoData{}, err
-	}
 
 	return PowerInfoData{
-		Power:     float32(power),
-		Frecuency: float32(frecuency),
+		Power:     parsedLine[9],
+		Frecuency: parsedLine[10],
 	}, nil
 }
 
@@ -141,25 +149,15 @@ func getCstateData(line string) (CStateData, error) {
 	var cstatedata = CStateData{}
 	line = strings.Replace(line, "%", "", 1)
 	parsedLine := strings.Split(line, " ")
-	resident, err := strconv.ParseFloat(parsedLine[1], 32)
-	if err != nil {
-		return CStateData{}, err
-	}
-	cstatedata.Resident = float32(resident)
+	resident := parsedLine[1]
+	cstatedata.Resident = resident
 	if parsedLine[0] == "C0" {
 		return cstatedata, nil
 	}
 
-	count, err := strconv.ParseFloat(parsedLine[2], 32)
-	if err != nil {
-		return CStateData{}, err
-	}
-	cstatedata.Count = int32(count)
-	latency, err := strconv.ParseFloat(parsedLine[3], 32)
-	if err != nil {
-		return CStateData{}, err
-	}
-	cstatedata.Latency = int32(latency)
+	cstatedata.Count = parsedLine[2]
+	cstatedata.Latency = parsedLine[3]
+
 	return cstatedata, nil
 
 }
@@ -176,4 +174,17 @@ func framesEnded(line string) bool {
 }
 func isEmptyLine(line string) bool {
 	return line == ""
+}
+
+func (pwrInf *PowerInfo) ToCsv() string {
+	line := ""
+	line += pwrInf.Averge.Power + ";" + pwrInf.Averge.Frecuency + ";"
+	line += pwrInf.Max.Power + ";" + pwrInf.Max.Frecuency + ";"
+	line += pwrInf.Min.Power + ";" + pwrInf.Min.Frecuency + ";"
+	line += pwrInf.C2.Resident + ";" + pwrInf.C2.Count + ";" + pwrInf.C2.Latency + ";"
+	line += pwrInf.C1.Resident + ";" + pwrInf.C1.Count + ";" + pwrInf.C1.Latency + ";"
+	line += pwrInf.C0.Resident + ";" + pwrInf.C0.Count + ";" + pwrInf.C0.Latency + ";"
+	line += pwrInf.Poll.Resident + ";" + pwrInf.Poll.Count + ";" + pwrInf.Poll.Latency + ";"
+	line += "\n"
+	return line
 }
