@@ -1,11 +1,14 @@
 package powerstat
 
 import (
+	"fmt"
 	"log"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 	"syscall"
+	"time"
 )
 
 //measurer is a struct that allows external package to intercat with powerstat
@@ -14,14 +17,16 @@ type measurer struct {
 }
 
 type PowerInfo struct {
-	Averge PowerInfoData `json:"averge"`
-	Max    PowerInfoData `json:"max"`
-	Min    PowerInfoData `json:"min"`
-	C1     CStateData    `json:"c1"`
-	C2     CStateData    `json:"c2"`
-	Poll   CStateData    `json:"poll"`
-	C0     CStateData    `json:"c0"`
-	frames []PowerInfoData
+	Message string        `json:"message"`
+	Averge  PowerInfoData `json:"averge"`
+	Max     PowerInfoData `json:"max"`
+	Min     PowerInfoData `json:"min"`
+	C1      CStateData    `json:"c1"`
+	C2      CStateData    `json:"c2"`
+	Poll    CStateData    `json:"poll"`
+	C0      CStateData    `json:"c0"`
+	frames  []PowerInfoData
+	Time    time.Duration
 }
 type PowerInfoData struct {
 	Power     string
@@ -44,7 +49,10 @@ func New(time string) *measurer {
 //Run executes powerstate
 func (m *measurer) Run() (PowerInfo, error) {
 	pwrInf := PowerInfo{frames: make([]PowerInfoData, 0)}
+	start := time.Now()
 	data, err := m.cmd.Output()
+	t := time.Now()
+	pwrInf.Time = t.Sub(start)
 	if err != nil {
 		return pwrInf, err
 
@@ -178,6 +186,7 @@ func isEmptyLine(line string) bool {
 
 func (pwrInf *PowerInfo) ToCsv() string {
 	line := ""
+	line += pwrInf.Message + ";"
 	line += pwrInf.Averge.Power + ";" + pwrInf.Averge.Frecuency + ";"
 	line += pwrInf.Max.Power + ";" + pwrInf.Max.Frecuency + ";"
 	line += pwrInf.Min.Power + ";" + pwrInf.Min.Frecuency + ";"
@@ -185,6 +194,34 @@ func (pwrInf *PowerInfo) ToCsv() string {
 	line += pwrInf.C1.Resident + ";" + pwrInf.C1.Count + ";" + pwrInf.C1.Latency + ";"
 	line += pwrInf.C0.Resident + ";" + pwrInf.C0.Count + ";" + pwrInf.C0.Latency + ";"
 	line += pwrInf.Poll.Resident + ";" + pwrInf.Poll.Count + ";" + pwrInf.Poll.Latency + ";"
+	line += strconv.FormatFloat(pwrInf.Time.Seconds(), 'f', 2, 64) + ";"
+	line += "\n"
+	return line
+}
+
+func (pwrInf *PowerInfo) GetCsvHeader() string {
+	header := "Message;"
+	header += "Average power(Watts);Average frecuenzy(GHz) ;"
+	header += "Max power(Watts);Max frecuenzy(GHz) ;"
+	header += "Min power(Watts);Min frecuenzy(GHz) ;"
+	header += "C2 resident;C2 count;C2 latency;"
+	header += "C1 resident;C1 count;C1 latency;"
+	header += "C0 resident;C0 count;C0 latency;"
+	header += "POLL resident;POLL count;POLL latency;"
+	header += "time"
+	header += "\n"
+	return header
+}
+
+func (pwrInf *PowerInfo) GetHeader() string {
+	header := fmt.Sprintf("%-20s%-20s%-20s%-20s", "Message", "Power(Watts)", "Frecuenzy(GHz)", "Time")
+	header += "\n"
+	return header
+}
+
+func (pwrInf *PowerInfo) GetData() string {
+	time := strconv.FormatFloat(pwrInf.Time.Seconds(), 'f', 2, 64)
+	line := fmt.Sprintf("%-20s%-20s%-20s%-20s", pwrInf.Message, pwrInf.Averge.Power, pwrInf.Averge.Frecuency, time)
 	line += "\n"
 	return line
 }

@@ -2,7 +2,6 @@ package docker
 
 import (
 	"context"
-	"log"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -58,7 +57,6 @@ func RunContainer(image string) error {
 	case <-statusCh:
 	}
 
-	log.Println("Contenedor finalizado")
 	return nil
 }
 
