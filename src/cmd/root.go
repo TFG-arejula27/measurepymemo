@@ -10,6 +10,7 @@ import (
 	"os/user"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/arejula27/measurepymemo/pkg/docker"
 	"github.com/arejula27/measurepymemo/pkg/frecuenzy"
@@ -30,7 +31,7 @@ var (
 		test      bool
 	}
 
-	cointainersEnded chan bool
+	stopMeasurement chan bool
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -111,12 +112,18 @@ func measurepymemo(cmd *cobra.Command, args []string) {
 
 	wg := new(sync.WaitGroup)
 	wg.Add(1)
-	cointainersEnded = make(chan bool, 1)
+	stopMeasurement = make(chan bool, 1)
 	checkPrivileges()
 	go gatherMetrics(wg)
 	if !rootFlags.test {
 		wg.Add(1)
 		go launchContainer(wg)
+	} else {
+		go func() {
+			time.Sleep(time.Second * 20)
+			stopMeasurement <- true
+
+		}()
 	}
 
 	wg.Wait()
@@ -128,7 +135,7 @@ func gatherMetrics(mainWg *sync.WaitGroup) {
 	measurer := powerstat.New(strconv.Itoa(rootFlags.maxTime))
 
 	go func() {
-		<-cointainersEnded
+		<-stopMeasurement
 		measurer.End()
 	}()
 
@@ -141,7 +148,7 @@ func gatherMetrics(mainWg *sync.WaitGroup) {
 	fmt.Print(pwrInf.GetHeader())
 	fmt.Print(pwrInf.GetData())
 	if rootFlags.file != "" {
-		err = WriteFile("data.csv", pwrInf)
+		err = WriteFile(rootFlags.file, pwrInf)
 		if err != nil {
 			fmt.Println("Error writing the output on the file")
 
@@ -171,7 +178,7 @@ func launchContainer(mainWg *sync.WaitGroup) {
 	}
 
 	wg.Wait()
-	cointainersEnded <- true
+	stopMeasurement <- true
 	mainWg.Done()
 
 }
