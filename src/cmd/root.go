@@ -27,6 +27,7 @@ var (
 		count     int
 		message   string
 		maxTime   int
+		test      bool
 	}
 
 	cointainersEnded chan bool
@@ -84,7 +85,10 @@ func init() {
 		"t",
 		60,
 		"Set the maximun time in seconds the program will gather metrics, if the container lates more the output will not be correct. Ensure the max time is correctly set")
-
+	flags.BoolVar(&rootFlags.test,
+		"test",
+		false,
+		"When this flag is used the container isn't run")
 	//TODO flag for choose image (i)
 }
 
@@ -106,11 +110,15 @@ func measurepymemo(cmd *cobra.Command, args []string) {
 	}
 
 	wg := new(sync.WaitGroup)
-	wg.Add(2)
-	cointainersEnded = make(chan bool)
+	wg.Add(1)
+	cointainersEnded = make(chan bool, 1)
 	checkPrivileges()
 	go gatherMetrics(wg)
-	go launchContainer(wg)
+	if !rootFlags.test {
+		wg.Add(1)
+		go launchContainer(wg)
+	}
+
 	wg.Wait()
 
 }
