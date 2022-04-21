@@ -14,6 +14,7 @@ import (
 
 	"github.com/arejula27/measurepymemo/pkg/docker"
 	"github.com/arejula27/measurepymemo/pkg/frecuenzy"
+	"github.com/arejula27/measurepymemo/pkg/http"
 	"github.com/arejula27/measurepymemo/pkg/powerstat"
 	"github.com/spf13/cobra"
 )
@@ -29,6 +30,7 @@ var (
 		message   string
 		maxTime   int
 		test      bool
+		url       bool
 	}
 
 	stopMeasurement chan bool
@@ -90,6 +92,12 @@ func init() {
 		"test",
 		false,
 		"When this flag is used the container isn't run")
+
+	flags.BoolVar(
+		&rootFlags.url,
+		"remote",
+		false,
+		"Set the http request it would call instead of running a container")
 	//TODO flag for choose image (i)
 }
 
@@ -115,15 +123,20 @@ func measurepymemo(cmd *cobra.Command, args []string) {
 	stopMeasurement = make(chan bool, 1)
 	checkPrivileges()
 	go gatherMetrics(wg)
-	if !rootFlags.test {
-		wg.Add(1)
-		go launchContainer(wg)
-	} else {
+	if rootFlags.test {
 		go func() {
 			time.Sleep(time.Second * 20)
 			stopMeasurement <- true
 
 		}()
+
+	} else if rootFlags.url {
+		//TODO
+		wg.Add(1)
+		go callHttp(wg)
+	} else {
+		wg.Add(1)
+		go launchContainer(wg)
 	}
 
 	wg.Wait()
@@ -171,6 +184,31 @@ func launchContainer(mainWg *sync.WaitGroup) {
 					os.Exit(1)
 				}
 				fmt.Printf(" contenedor %d secuencia %d finalizado\n", j, id)
+			}
+
+			wg.Done()
+		}(i, wg)
+	}
+
+	wg.Wait()
+	stopMeasurement <- true
+	mainWg.Done()
+
+}
+
+func callHttp(mainWg *sync.WaitGroup) {
+	wg := new(sync.WaitGroup)
+
+	for i := 0; i < rootFlags.paralel; i++ {
+		wg.Add(1)
+		go func(id int, wg *sync.WaitGroup) {
+			for j := 0; j < rootFlags.count; j++ {
+				err := http.CallRemote
+				if err != nil {
+					fmt.Println("Error al lanzar realizar la llamada http")
+					os.Exit(1)
+				}
+				fmt.Printf(" llamada http %d secuencia %d finalizado\n", j, id)
 			}
 
 			wg.Done()
