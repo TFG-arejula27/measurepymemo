@@ -168,8 +168,8 @@ func gatherMetrics(mainWg *sync.WaitGroup) {
 
 	}
 	mainWg.Done()
-	fmt.Println("Error, mediciones terminadas antes del proceso, ponga más tiempo de medición")
-	os.Exit(1)
+	//fmt.Println("Error, mediciones terminadas antes del proceso, ponga más tiempo de medición")
+	//os.Exit(1)
 }
 
 func launchContainer(mainWg *sync.WaitGroup) {
