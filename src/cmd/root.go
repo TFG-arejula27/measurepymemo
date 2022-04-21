@@ -131,7 +131,6 @@ func measurepymemo(cmd *cobra.Command, args []string) {
 		}()
 
 	} else if rootFlags.url {
-		//TODO
 		wg.Add(1)
 		go callHttp(wg)
 	} else {
@@ -169,6 +168,8 @@ func gatherMetrics(mainWg *sync.WaitGroup) {
 
 	}
 	mainWg.Done()
+	fmt.Println("Error, mediciones terminadas antes del proceso, ponga más tiempo de medición")
+	os.Exit(1)
 }
 
 func launchContainer(mainWg *sync.WaitGroup) {
