@@ -17,17 +17,20 @@ func CallRemote() error {
 	req, err := http.NewRequest("POST", "http://localhost:8080/function/pymemo", body)
 
 	if err != nil {
-		log.Fatalln("URL inválida")
+		log.Println(err)
+		return err
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatalln("Error al realizar la llamada")
+		log.Println(err)
+		return err
 	}
 	respDump, err := httputil.DumpResponse(resp, true)
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return err
 	}
 
 	print(string(respDump))

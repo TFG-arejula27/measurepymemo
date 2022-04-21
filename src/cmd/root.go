@@ -203,7 +203,7 @@ func callHttp(mainWg *sync.WaitGroup) {
 		wg.Add(1)
 		go func(id int, wg *sync.WaitGroup) {
 			for j := 0; j < rootFlags.count; j++ {
-				err := http.CallRemote
+				err := http.CallRemote()
 				if err != nil {
 					fmt.Println("Error al lanzar realizar la llamada http")
 					os.Exit(1)
