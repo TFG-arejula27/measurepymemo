@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"net/http/httputil"
-	"strings"
 )
 
 func CallRemote() error {
@@ -12,9 +11,9 @@ func CallRemote() error {
 
 	// curl -d "-i /home/app/function/assets/video1-tom_fisk_pexels_id5210841.mp4"  127.0.0.1:8080/function/pymemo
 
-	bodyContent := "-i /home/app/function/assets/video1-tom_fisk_pexels_id5210841.mp4"
-	body := strings.NewReader(bodyContent)
-	req, err := http.NewRequest("POST", "http://localhost:8080/function/pymemo", body)
+	//bodyContent := "-i /home/app/function/assets/video1-tom_fisk_pexels_id5210841.mp4"
+	//body := strings.NewReader(bodyContent)
+	req, err := http.NewRequest("POST", "http://localhost:8080/function/pymemo", nil)
 
 	if err != nil {
 		log.Println(err)
