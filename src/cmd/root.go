@@ -31,6 +31,7 @@ var (
 		maxTime   int
 		test      bool
 		url       bool
+		threshold int
 	}
 
 	stopMeasurement chan bool
@@ -98,6 +99,11 @@ func init() {
 		"remote",
 		false,
 		"Set the http request it would call instead of running a container")
+
+	flags.IntVar(&rootFlags.threshold, //TODO
+		"threshold",
+		127,
+		"Set the threshold")
 	//TODO flag for choose image (i)
 }
 
@@ -199,12 +205,12 @@ func launchContainer(mainWg *sync.WaitGroup) {
 
 func callHttp(mainWg *sync.WaitGroup) {
 	wg := new(sync.WaitGroup)
-
 	for i := 0; i < rootFlags.paralel; i++ {
 		wg.Add(1)
 		go func(id int, wg *sync.WaitGroup) {
 			for j := 0; j < rootFlags.count; j++ {
-				err := http.CallRemote()
+
+				err := http.CallRemote(strconv.Itoa(rootFlags.threshold))
 				if err != nil {
 					fmt.Println("Error al lanzar realizar la llamada http")
 					os.Exit(1)
