@@ -6,6 +6,7 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/user"
 	"strconv"
@@ -121,8 +122,9 @@ func measurepymemo(cmd *cobra.Command, args []string) {
 		fm := frecuenzy.New()
 		err := fm.SetGovernor(rootFlags.governor)
 		if err != nil {
-			fmt.Println("Problems on set a new governor")
-			panic(err)
+			fmt.Println("Problems on set a new governor: " + rootFlags.governor)
+			log.Fatalln(err)
+
 		}
 		defer func() {
 			err = fm.Restore()
