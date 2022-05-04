@@ -49,7 +49,7 @@ func (fm *frecuenzyManager) readGovernors() error {
 	return nil
 }
 
-func (fm *frecuenzyManager) Set(frequenzy int) error {
+func (fm *frecuenzyManager) SetFrecuenzy(frequenzy int) error {
 	freq := strconv.Itoa(frequenzy)
 	cmd := exec.Command("cpupower", "frequency-set", "--freq", freq)
 	err := cmd.Run()
@@ -59,6 +59,17 @@ func (fm *frecuenzyManager) Set(frequenzy int) error {
 	cmd.Wait()
 	return nil
 }
+
+func (fm *frecuenzyManager) SetGovernor(governor string) error {
+	cmd := exec.Command("cpupower", "frequency-set", "--governor", governor)
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	cmd.Wait()
+	return nil
+}
+
 func (fm *frecuenzyManager) Restore() error {
 	for i, governor := range fm.governors {
 		cmd := exec.Command("cpupower", "--cpu", strconv.Itoa(i), "frequency-set", "--governor", governor)

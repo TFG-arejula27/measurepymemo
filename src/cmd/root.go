@@ -32,6 +32,7 @@ var (
 		test      bool
 		url       bool
 		threshold int
+		governor  string
 	}
 
 	stopMeasurement chan bool
@@ -104,16 +105,40 @@ func init() {
 		"threshold",
 		127,
 		"Set the threshold")
+
+	flags.StringVarP(&rootFlags.governor,
+		"governor",
+		"g",
+		"",
+		"Set the governor")
+
 	//TODO flag for choose image (i)
 }
 
 func measurepymemo(cmd *cobra.Command, args []string) {
 
-	if rootFlags.frecuenzy > 0 {
+	if rootFlags.governor != "" {
 		fm := frecuenzy.New()
-		err := fm.Set(rootFlags.frecuenzy)
+		err := fm.SetGovernor(rootFlags.governor)
+		if err != nil {
+			fmt.Println("Problems on set a new governor")
+			panic(err)
+		}
+		defer func() {
+			err = fm.Restore()
+			if err != nil {
+				fmt.Println("Problems recoveryn previous governor")
+
+			}
+
+		}()
+
+	} else if rootFlags.frecuenzy > 0 {
+		fm := frecuenzy.New()
+		err := fm.SetFrecuenzy(rootFlags.frecuenzy)
 		if err != nil {
 			fmt.Println("Problems on set a new frecuenzy")
+			panic(err)
 		}
 		defer func() {
 			err = fm.Restore()
