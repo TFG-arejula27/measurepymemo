@@ -23,7 +23,6 @@
             "program": "${workspaceFolder}/src/main.go",
             "args": ["--test"]
         },
-
         {
             "name": "measure remote",
             "type": "go",
@@ -33,6 +32,6 @@
             "console": "integratedTerminal",
             "program": "${workspaceFolder}/src/main.go",
             "args": ["--remote"]
-        },
+        }
     ]
 }
