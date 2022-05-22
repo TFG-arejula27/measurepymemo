@@ -14,13 +14,13 @@ func CallRemote(threshold string) error {
 
 	bodyContent := "-t " + threshold
 	body := strings.NewReader(bodyContent)
-	req, err := http.NewRequest("POST", "http://localhost:8080/function/threshold", body)
+	req, err := http.NewRequest("POST", "http://localhost:8080/pymemo", body)
 
 	if err != nil {
 		log.Println(err)
 		return err
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
