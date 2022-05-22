@@ -7,7 +7,6 @@ package cmd
 import (
 	"fmt"
 	"log"
-	"net/rpc"
 	"os"
 	"os/user"
 	"strconv"
@@ -23,22 +22,20 @@ import (
 
 const commandName = "measurepymemo"
 
-type RootFlags struct {
-	file       string
-	paralel    int
-	frecuenzy  int
-	count      int
-	message    string
-	maxTime    int
-	test       bool
-	url        bool
-	threshold  int
-	governor   string
-	rpcServers []string
-}
-
 var (
-	rootFlags       RootFlags
+	rootFlags struct {
+		file      string
+		paralel   int
+		frecuenzy int
+		count     int
+		message   string
+		maxTime   int
+		test      bool
+		url       bool
+		threshold int
+		governor  string
+	}
+
 	stopMeasurement chan bool
 )
 
@@ -115,11 +112,6 @@ func init() {
 		"g",
 		"",
 		"Set the governor")
-	flags.StringArrayVar(
-		&rootFlags.rpcServers,
-		"rpc",
-		[]string{},
-		"Gather metrics from rpc servers")
 
 	//TODO flag for choose image (i)
 }
@@ -163,27 +155,7 @@ func measurepymemo(cmd *cobra.Command, args []string) {
 	wg.Add(1)
 	stopMeasurement = make(chan bool, 1)
 	checkPrivileges()
-
-	isRpc := len(rootFlags.rpcServers) == 0
-	if isRpc {
-		for _, server := range rootFlags.rpcServers {
-			client, err := rpc.DialHTTP("tcp", server)
-			if err != nil {
-				panic(err)
-			}
-
-			var reply powerstat.PowerInfo
-			err = client.Call("gatherService.measure", rootFlags, &reply)
-			if err != nil {
-				panic(err)
-			}
-
-		}
-
-	} else {
-		go gatherMetrics(wg)
-	}
-
+	go gatherMetrics(wg)
 	if rootFlags.test {
 		go func() {
 			time.Sleep(time.Second * 20)
