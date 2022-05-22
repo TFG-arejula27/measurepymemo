@@ -1,10 +1,11 @@
 package http
 
 import (
+	"bytes"
+	"encoding/json"
 	"log"
 	"net/http"
 	"net/http/httputil"
-	"strings"
 )
 
 func CallRemote(threshold string) error {
@@ -12,9 +13,19 @@ func CallRemote(threshold string) error {
 
 	// curl -d "-i /home/app/function/assets/video1-tom_fisk_pexels_id5210841.mp4"  127.0.0.1:8080/function/pymemo
 
-	bodyContent := "-t " + threshold
-	body := strings.NewReader(bodyContent)
-	req, err := http.NewRequest("POST", "http://localhost:8080/pymemo", body)
+	bodyContent := struct {
+		Args string `json:"args"`
+	}{
+		Args: "-t " + threshold,
+	}
+
+	var body bytes.Buffer
+	err := json.NewEncoder(&body).Encode(bodyContent)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	req, err := http.NewRequest("POST", "http://localhost:8080/pymemo", &body)
 
 	if err != nil {
 		log.Println(err)
