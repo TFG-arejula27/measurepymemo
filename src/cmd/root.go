@@ -91,10 +91,6 @@ func init() {
 		"t",
 		60,
 		"Set the maximun time in seconds the program will gather metrics, if the container lates more the output will not be correct. Ensure the max time is correctly set")
-	flags.BoolVar(&rootFlags.test,
-		"test",
-		false,
-		"When this flag is used the container isn't run")
 
 	flags.BoolVar(
 		&rootFlags.url,
@@ -152,18 +148,11 @@ func measurepymemo(cmd *cobra.Command, args []string) {
 	}
 
 	wg := new(sync.WaitGroup)
-	wg.Add(1)
+	
 	stopMeasurement = make(chan bool, 1)
 	checkPrivileges()
-	go gatherMetrics(wg)
-	if rootFlags.test {
-		go func() {
-			time.Sleep(time.Second * 20)
-			stopMeasurement <- true
 
-		}()
-
-	} else if rootFlags.url {
+	if rootFlags.url {
 		wg.Add(1)
 		go callHttp(wg)
 	} else {
