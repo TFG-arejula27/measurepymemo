@@ -11,7 +11,6 @@ import (
 	"os/user"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/arejula27/measurepymemo/pkg/docker"
 	"github.com/arejula27/measurepymemo/pkg/frecuenzy"
